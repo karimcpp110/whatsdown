@@ -34,93 +34,121 @@ int main() {
   });
 
   svr.Get("/script.js", [](const Request &req, Response &res) {
-    // API: Send Message
-    svr.Post("/send", [&](const Request &req, Response &res) {
-      if (req.has_param("sender") && req.has_param("receiver") &&
-          req.has_param("content")) {
-        string sender = req.get_param_value("sender");
-        string receiver = req.get_param_value("receiver");
-        string content = req.get_param_value("content");
+    string content = readFile("script.js");
+    res.set_content(content, "application/javascript");
+  });
 
-        server.sendMessage(sender, receiver, content);
-        res.set_content("Sent", "text/plain");
+  // API: Login
+  svr.Post("/login", [&](const Request &req, Response &res) {
+    if (req.has_param("id") && req.has_param("name")) {
+      string id = req.get_param_value("id");
+      string name = req.get_param_value("name");
+      string password =
+          req.has_param("password") ? req.get_param_value("password") : "0000";
+
+      // Attempt login (auto-register if new, check pwd if exists)
+      bool success = server.userLogin(id, name, password);
+
+      if (success) {
+        server.updateUserActivity(id);
+        res.set_content("Logged in", "text/plain");
       } else {
-        res.status = 400;
-        res.set_content("Missing parameters", "text/plain");
+        res.status = 401; // Unauthorized
+        res.set_content("Invalid Password", "text/plain");
       }
-    });
+    } else {
+      res.status = 400;
+      res.set_content("Missing parameters", "text/plain");
+    }
+  });
 
-    // API: Process Queue (and Mark Read)
-    svr.Get("/process", [&](const Request &req, Response &res) {
-      string viewerId =
-          req.has_param("viewer") ? req.get_param_value("viewer") : "";
-      string currentChatId =
-          req.has_param("chatWith") ? req.get_param_value("chatWith") : "";
+  // API: Send Message
+  svr.Post("/send", [&](const Request &req, Response &res) {
+    if (req.has_param("sender") && req.has_param("receiver") &&
+        req.has_param("content")) {
+      string sender = req.get_param_value("sender");
+      string receiver = req.get_param_value("receiver");
+      string content = req.get_param_value("content");
 
-      // If viewer is viewing a chat, mark messages from that chat as read
-      if (!viewerId.empty() && !currentChatId.empty()) {
-        server.markMessagesAsRead(currentChatId, viewerId);
-        server.updateUserActivity(viewerId);
-      }
+      server.sendMessage(sender, receiver, content);
+      res.set_content("Sent", "text/plain");
+    } else {
+      res.status = 400;
+      res.set_content("Missing parameters", "text/plain");
+    }
+  });
 
-      // Also update activity just for polling
-      if (!viewerId.empty()) {
-        server.updateUserActivity(viewerId);
-      }
+  // API: Process Queue (and Mark Read)
+  svr.Get("/process", [&](const Request &req, Response &res) {
+    string viewerId =
+        req.has_param("viewer") ? req.get_param_value("viewer") : "";
+    string currentChatId =
+        req.has_param("chatWith") ? req.get_param_value("chatWith") : "";
 
-      auto messages = server.processMessagesAndReturnStructs();
+    // If viewer is viewing a chat, mark messages from that chat as read
+    if (!viewerId.empty() && !currentChatId.empty()) {
+      server.markMessagesAsRead(currentChatId, viewerId);
+      server.updateUserActivity(viewerId);
+    }
 
-      // Manual JSON serialization
-      stringstream json;
-      json << "[";
-      for (size_t i = 0; i < messages.size(); ++i) {
-        json << "{";
-        json << "\"sender\": \"" << messages[i].senderId << "\",";
-        json << "\"receiver\": \"" << messages[i].receiverId << "\",";
-        json << "\"content\": \"" << messages[i].content << "\",";
-        json << "\"timestamp\": \"" << messages[i].timestamp << "\",";
-        json << "\"isRead\": " << (messages[i].isRead ? "true" : "false");
-        json << "}";
-        if (i < messages.size() - 1)
-          json << ",";
-      }
-      json << "]";
+    // Also update activity just for polling
+    if (!viewerId.empty()) {
+      server.updateUserActivity(viewerId);
+    }
 
-      res.set_content(json.str(), "application/json");
-    });
+    auto messages = server.processMessagesAndReturnStructs();
 
-    // API: Get All Users (with Online Status)
-    svr.Get("/users", [&](const Request &req, Response &res) {
-      string requesterId =
-          req.has_param("requester") ? req.get_param_value("requester") : "";
-      if (!requesterId.empty())
-        server.updateUserActivity(requesterId);
+    // Manual JSON serialization
+    stringstream json;
+    json << "[";
+    for (size_t i = 0; i < messages.size(); ++i) {
+      json << "{";
+      json << "\"sender\": \"" << messages[i].senderId << "\",";
+      json << "\"receiver\": \"" << messages[i].receiverId << "\",";
+      json << "\"content\": \"" << messages[i].content << "\",";
+      json << "\"timestamp\": \"" << messages[i].timestamp << "\",";
+      json << "\"isRead\": " << (messages[i].isRead ? "true" : "false");
+      json << "}";
+      if (i < messages.size() - 1)
+        json << ",";
+    }
+    json << "]";
 
-      auto users = server.getAllUsers();
-      long long now = time(nullptr);
+    res.set_content(json.str(), "application/json");
+  });
 
-      // Manual JSON serialization
-      stringstream json;
-      json << "[";
-      for (size_t i = 0; i < users.size(); ++i) {
-        bool isOnline =
-            (now - users[i].lastActiveTime) < 15; // 15 seconds threshold
+  // API: Get All Users (with Online Status)
+  svr.Get("/users", [&](const Request &req, Response &res) {
+    string requesterId =
+        req.has_param("requester") ? req.get_param_value("requester") : "";
+    if (!requesterId.empty())
+      server.updateUserActivity(requesterId);
 
-        json << "{";
-        json << "\"id\": \"" << users[i].id << "\",";
-        json << "\"name\": \"" << users[i].name << "\",";
-        json << "\"online\": " << (isOnline ? "true" : "false");
-        json << "}";
-        if (i < users.size() - 1)
-          json << ",";
-      }
-      json << "]";
+    auto users = server.getAllUsers();
+    long long now = time(nullptr);
 
-      res.set_content(json.str(), "application/json");
-    });
+    // Manual JSON serialization
+    stringstream json;
+    json << "[";
+    for (size_t i = 0; i < users.size(); ++i) {
+      bool isOnline =
+          (now - users[i].lastActiveTime) < 15; // 15 seconds threshold
 
-    cout << "Server started at http://localhost:8080" << endl;
-    svr.listen("0.0.0.0", 8080);
+      json << "{";
+      json << "\"id\": \"" << users[i].id << "\",";
+      json << "\"name\": \"" << users[i].name << "\",";
+      json << "\"online\": " << (isOnline ? "true" : "false");
+      json << "}";
+      if (i < users.size() - 1)
+        json << ",";
+    }
+    json << "]";
 
-    return 0;
+    res.set_content(json.str(), "application/json");
+  });
+
+  cout << "Server started at http://localhost:8080" << endl;
+  svr.listen("0.0.0.0", 8080);
+
+  return 0;
 }
