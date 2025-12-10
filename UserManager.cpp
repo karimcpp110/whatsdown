@@ -4,7 +4,6 @@
 #include <iostream>
 #include <sstream>
 
-
 UserManager::UserManager() { loadUsers(); }
 
 void UserManager::addUser(const std::string &id, const std::string &name,
@@ -59,15 +58,30 @@ void UserManager::loadUsers() {
 
   std::string line;
   while (std::getline(file, line)) {
+    if (line.empty())
+      continue;
     std::stringstream ss(line);
-    std::string id, name, password, lastActiveStr;
-    if (std::getline(ss, id, '|') && std::getline(ss, name, '|') &&
-        std::getline(ss, password, '|')) {
+    std::string id, name, token3, token4;
 
+    if (std::getline(ss, id, '|') && std::getline(ss, name, '|')) {
+      // Read remaining tokens
+      std::getline(ss, token3, '|');
+      std::getline(ss, token4); // Read rest of line
+
+      std::string password = "0000";
       long long lastActive = 0;
-      if (std::getline(ss, lastActiveStr)) {
+
+      if (!token4.empty()) {
+        // New Format: ID|Name|Password|Timestamp
+        password = token3;
         try {
-          lastActive = std::stoll(lastActiveStr);
+          lastActive = std::stoll(token4);
+        } catch (...) {
+        }
+      } else {
+        // Old Format: ID|Name|Timestamp (token3 captures timestamp)
+        try {
+          lastActive = std::stoll(token3);
         } catch (...) {
         }
       }
