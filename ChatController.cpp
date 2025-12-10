@@ -3,9 +3,14 @@
 #include <iostream>
 #include <sstream>
 
-void ChatController::userLogin(const std::string &id, const std::string &name,
+bool ChatController::userLogin(const std::string &id, const std::string &name,
                                const std::string &password) {
-  userManager.addUser(id, name, password);
+  if (userManager.userExists(id)) {
+    return userManager.verifyUser(id, password);
+  } else {
+    userManager.addUser(id, name, password);
+    return true;
+  }
 }
 
 bool ChatController::verifyUser(const std::string &id,

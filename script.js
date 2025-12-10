@@ -55,9 +55,10 @@ document.addEventListener('DOMContentLoaded', () => {
 async function login() {
     const idInput = document.getElementById('my-id').value;
     const nameInput = document.getElementById('my-name').value;
+    const passwordInput = document.getElementById('my-password').value;
 
-    if (!idInput || !nameInput) {
-        alert("Please enter ID and Name");
+    if (!idInput || !nameInput || !passwordInput) {
+        alert("Please enters ID, Name, and Password");
         return;
     }
 
@@ -77,11 +78,21 @@ async function login() {
     }
 
     // Call backend login
-    await fetch(`${apiBaseUrl}/login`, {
+    const response = await fetch(`${apiBaseUrl}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `id=${myId}&name=${myName}&password=0000`
+        body: `id=${myId}&name=${myName}&password=${encodeURIComponent(passwordInput)}`
     });
+
+    if (response.status === 401) {
+        alert("Incorrect Password or User ID mismatch!");
+        return;
+    }
+
+    if (!response.ok) {
+        alert("Login failed: " + response.statusText);
+        return;
+    }
 
     // Switch UI
     document.getElementById('login-screen').classList.add('hidden');
@@ -89,6 +100,11 @@ async function login() {
     document.getElementById('display-name').textContent = myName;
     document.getElementById('my-avatar').textContent = myName.charAt(0).toUpperCase();
     document.getElementById('my-avatar').style.background = getUserColor(myId);
+
+    // Request Notification Permission
+    if ("Notification" in window) {
+        Notification.requestPermission();
+    }
 
     // Initial fetch
     fetchUsers();
@@ -247,6 +263,11 @@ async function fetchMessages() {
             const audio = document.getElementById('notification-sound');
             if (audio) {
                 audio.play().catch(e => { });
+            }
+
+            // Show System Notification if backgrounded
+            if (document.hidden && "Notification" in window && Notification.permission === "granted") {
+                new Notification("WhatsDown", { body: "New message received!" });
             }
         }
 

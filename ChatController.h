@@ -12,7 +12,7 @@ private:
   MessageManager messageManager;
 
 public:
-  void userLogin(const std::string &id, const std::string &name,
+  bool userLogin(const std::string &id, const std::string &name,
                  const std::string &password);
   bool verifyUser(const std::string &id, const std::string &password);
   void sendMessage(const std::string &senderId, const std::string &receiverId,
