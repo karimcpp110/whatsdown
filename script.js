@@ -17,14 +17,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const savedName = localStorage.getItem('whatsdown_name');
     const savedUrl = localStorage.getItem('whatsdown_url');
 
-    if (savedId && savedName) {
-        document.getElementById('my-id').value = savedId;
-        document.getElementById('my-name').value = savedName;
+    if (savedId) {
+        // Pre-fill Login Tab
+        const loginIdField = document.getElementById('login-id');
+        if (loginIdField) loginIdField.value = savedId;
+
+        // Pre-fill Register Tab (optional)
+        const regIdField = document.getElementById('reg-id');
+        if (regIdField) regIdField.value = savedId;
+
         if (savedUrl) {
-            document.getElementById('server-url').value = savedUrl;
+            const urlField = document.getElementById('server-url');
+            if (urlField) urlField.value = savedUrl;
             apiBaseUrl = savedUrl;
         }
-        login();
     }
 
     // Check Dark Mode
