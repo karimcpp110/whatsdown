@@ -101,20 +101,25 @@ async function performLogin() {
         return;
     }
 
-    const response = await fetch(`${apiBaseUrl}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `id=${id}&password=${encodeURIComponent(password)}`
-    });
+    try {
+        const response = await fetch(`${apiBaseUrl}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `id=${id}&password=${encodeURIComponent(password)}`
+        });
 
-    if (!response.ok) {
-        alert("Login Failed: " + (await response.text()));
-        return;
+        if (!response.ok) {
+            alert("Login Failed: " + (await response.text()));
+            return;
+        }
+
+        // Success
+        const name = await response.text();
+        completeLogin(id, name);
+    } catch (error) {
+        alert("⚠️ Connection Error!\nCould not connect to the server.\n\n1. Check your Server URL.\n2. Ensure 'bash share.sh' is running.");
+        console.error(error);
     }
-
-    // Success
-    const name = await response.text();
-    completeLogin(id, name);
 }
 
 async function performRegister() {
@@ -137,20 +142,25 @@ async function performRegister() {
         return;
     }
 
-    const response = await fetch(`${apiBaseUrl}/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `id=${id}&name=${encodeURIComponent(name)}&password=${encodeURIComponent(password)}`
-    });
+    try {
+        const response = await fetch(`${apiBaseUrl}/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `id=${id}&name=${encodeURIComponent(name)}&password=${encodeURIComponent(password)}`
+        });
 
-    if (!response.ok) {
-        alert("Registration Failed: " + (await response.text()));
-        return;
+        if (!response.ok) {
+            alert("Registration Failed: " + (await response.text()));
+            return;
+        }
+
+        // Success - Auto Login
+        alert("Account Created! Logging in...");
+        completeLogin(id, name);
+    } catch (error) {
+        alert("⚠️ Connection Error!\nCould not connect to the server.\n\n1. Check your Server URL.\n2. Ensure 'bash share.sh' is running.");
+        console.error(error);
     }
-
-    // Success - Auto Login
-    alert("Account Created! Logging in...");
-    completeLogin(id, name);
 }
 
 function completeLogin(id, name) {
