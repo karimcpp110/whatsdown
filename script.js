@@ -4,6 +4,7 @@ let currentChatId = null;
 let currentChatName = null;
 let displayedMessages = new Set();
 let allUsers = [];
+let apiBaseUrl = ""; // Default to local relative path
 
 // Poll for messages and users
 setInterval(() => fetchMessages(), 1000); // Poll faster for responsiveness
@@ -14,9 +15,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check Auto-Login
     const savedId = localStorage.getItem('whatsdown_id');
     const savedName = localStorage.getItem('whatsdown_name');
+    const savedUrl = localStorage.getItem('whatsdown_url');
+
     if (savedId && savedName) {
         document.getElementById('my-id').value = savedId;
         document.getElementById('my-name').value = savedName;
+        if (savedUrl) {
+            document.getElementById('server-url').value = savedUrl;
+            apiBaseUrl = savedUrl;
+        }
         login();
     }
 
@@ -61,8 +68,16 @@ async function login() {
     localStorage.setItem('whatsdown_id', myId);
     localStorage.setItem('whatsdown_name', myName);
 
+    // Set API URL
+    const urlInput = document.getElementById('server-url').value.trim();
+    // Remove trailing slash if present
+    apiBaseUrl = urlInput.replace(/\/$/, "");
+    if (apiBaseUrl) {
+        localStorage.setItem('whatsdown_url', apiBaseUrl);
+    }
+
     // Call backend login
-    await fetch('/login', {
+    await fetch(`${apiBaseUrl}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: `id=${myId}&name=${myName}&password=0000`
@@ -174,77 +189,43 @@ async function sendMessage() {
     }
 
     const input = document.getElementById('message-input');
-    const content = input.value.trim();
+    // For MVP: We append new messages. updating ticks is harder without proper IDs.
+    // Hack: We remove and re-add if we detect change? Too flickery.
+    // Solution: We store state in DOM id.
 
-    if (!content) return;
+    const existingBubble = document.getElementById(msgId);
 
-    input.value = '';
-
-    await fetch('/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `sender=${myId}&receiver=${currentChatId}&content=${encodeURIComponent(content)}`
-    });
-
-    fetchMessages();
-}
-
-async function fetchMessages() {
-    if (!myId) return;
-
-    try {
-        // Send 'chatWith' param to mark messages as read
-        const url = `/process?viewer=${myId}&chatWith=${currentChatId || ''}`;
-        const response = await fetch(url);
-        const messages = await response.json();
-        let newMessages = false;
-
-        if (!currentChatId) return; // Don't render chat if no chat selected, but loop runs to keep session alive
-
-        messages.forEach(msg => {
-            // Unique ID includes read status so we update ticks if they change
-            const msgId = `${msg.sender}-${msg.receiver}-${msg.content}-${msg.timestamp}`;
-
-            // If already shown AND read status hasn't changed (complex to track, so simplified:
-            // we just check if ID is in set. If ticks need update, we can't rely on simple set.
-            // Better: Find existing element and update class, or re-render if small list.
-            // For MVP: We append new messages. updating ticks is harder without proper IDs.
-            // Hack: We remove and re-add if we detect change? Too flickery.
-            // Solution: We store state in DOM id.
-
-            const existingBubble = document.getElementById(msgId);
-
-            if (msg.receiver === myId && msg.sender === currentChatId) {
-                if (!existingBubble) {
-                    addMessageBubble(msg.content, 'received', msg.timestamp, msg.isRead, msgId);
-                    displayedMessages.add(msgId);
-                    newMessages = true;
-                }
-            } else if (msg.sender === myId && msg.receiver === currentChatId) {
-                if (!existingBubble) {
-                    addMessageBubble(msg.content, 'sent', msg.timestamp, msg.isRead, msgId);
-                    displayedMessages.add(msgId);
-                } else {
-                    // Check if we need to update read receipt
-                    const tickSpan = existingBubble.querySelector('.ticks');
-                    if (tickSpan && msg.isRead && tickSpan.textContent !== '👁️') {
-                        tickSpan.textContent = '👁️';
-                        tickSpan.style.color = '#34b7f1';
-                    }
-                }
-            }
-        });
-
-        if (newMessages) {
-            const audio = document.getElementById('notification-sound');
-            if (audio) {
-                audio.play().catch(e => { });
+    if (msg.receiver === myId && msg.sender === currentChatId) {
+        if (!existingBubble) {
+            addMessageBubble(msg.content, 'received', msg.timestamp, msg.isRead, msgId);
+            displayedMessages.add(msgId);
+            newMessages = true;
+        }
+    } else if (msg.sender === myId && msg.receiver === currentChatId) {
+        if (!existingBubble) {
+            addMessageBubble(msg.content, 'sent', msg.timestamp, msg.isRead, msgId);
+            displayedMessages.add(msgId);
+        } else {
+            // Check if we need to update read receipt
+            const tickSpan = existingBubble.querySelector('.ticks');
+            if (tickSpan && msg.isRead && tickSpan.textContent !== '👁️') {
+                tickSpan.textContent = '👁️';
+                tickSpan.style.color = '#34b7f1';
             }
         }
+    }
+});
+
+if (newMessages) {
+    const audio = document.getElementById('notification-sound');
+    if (audio) {
+        audio.play().catch(e => { });
+    }
+}
 
     } catch (e) {
-        console.error("Error fetching messages:", e);
-    }
+    console.error("Error fetching messages:", e);
+}
 }
 
 async function fetchUsers() {
