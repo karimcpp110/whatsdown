@@ -93,6 +93,14 @@ async function performLogin() {
 
     saveServerUrl();
 
+    // Enforce Server URL if using GitHub Pages (not localhost)
+    if (!apiBaseUrl && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        alert("⚠️ You are using the online version.\nPlease enter your Pinggy Server URL in the box below!");
+        document.getElementById('server-url').focus();
+        document.getElementById('server-url').style.border = "2px solid red";
+        return;
+    }
+
     const response = await fetch(`${apiBaseUrl}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -120,6 +128,14 @@ async function performRegister() {
     }
 
     saveServerUrl();
+
+    // Enforce Server URL if using GitHub Pages (not localhost)
+    if (!apiBaseUrl && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        alert("⚠️ You are using the online version.\nPlease enter your Pinggy Server URL in the box below!");
+        document.getElementById('server-url').focus();
+        document.getElementById('server-url').style.border = "2px solid red";
+        return;
+    }
 
     const response = await fetch(`${apiBaseUrl}/register`, {
         method: 'POST',
