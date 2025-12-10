@@ -189,43 +189,70 @@ async function sendMessage() {
     }
 
     const input = document.getElementById('message-input');
-    // For MVP: We append new messages. updating ticks is harder without proper IDs.
-    // Hack: We remove and re-add if we detect change? Too flickery.
-    // Solution: We store state in DOM id.
+    const content = input.value.trim();
 
-    const existingBubble = document.getElementById(msgId);
+    if (!content) return;
 
-    if (msg.receiver === myId && msg.sender === currentChatId) {
-        if (!existingBubble) {
-            addMessageBubble(msg.content, 'received', msg.timestamp, msg.isRead, msgId);
-            displayedMessages.add(msgId);
-            newMessages = true;
-        }
-    } else if (msg.sender === myId && msg.receiver === currentChatId) {
-        if (!existingBubble) {
-            addMessageBubble(msg.content, 'sent', msg.timestamp, msg.isRead, msgId);
-            displayedMessages.add(msgId);
-        } else {
-            // Check if we need to update read receipt
-            const tickSpan = existingBubble.querySelector('.ticks');
-            if (tickSpan && msg.isRead && tickSpan.textContent !== '👁️') {
-                tickSpan.textContent = '👁️';
-                tickSpan.style.color = '#34b7f1';
+    input.value = '';
+
+    await fetch(`${apiBaseUrl}/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `sender=${myId}&receiver=${currentChatId}&content=${encodeURIComponent(content)}`
+    });
+
+    fetchMessages();
+}
+
+async function fetchMessages() {
+    if (!myId) return;
+
+    try {
+        // Send 'chatWith' param to mark messages as read
+        const url = `${apiBaseUrl}/process?viewer=${myId}&chatWith=${currentChatId || ''}`;
+        const response = await fetch(url);
+        const messages = await response.json();
+        let newMessages = false;
+
+        if (!currentChatId) return; // Don't render chat if no chat selected, but loop runs to keep session alive
+
+        messages.forEach(msg => {
+            // Unique ID includes read status so we update ticks if they change
+            const msgId = `${msg.sender}-${msg.receiver}-${msg.content}-${msg.timestamp}`;
+
+            const existingBubble = document.getElementById(msgId);
+
+            if (msg.receiver === myId && msg.sender === currentChatId) {
+                if (!existingBubble) {
+                    addMessageBubble(msg.content, 'received', msg.timestamp, msg.isRead, msgId);
+                    displayedMessages.add(msgId);
+                    newMessages = true;
+                }
+            } else if (msg.sender === myId && msg.receiver === currentChatId) {
+                if (!existingBubble) {
+                    addMessageBubble(msg.content, 'sent', msg.timestamp, msg.isRead, msgId);
+                    displayedMessages.add(msgId);
+                } else {
+                    // Check if we need to update read receipt
+                    const tickSpan = existingBubble.querySelector('.ticks');
+                    if (tickSpan && msg.isRead && tickSpan.textContent !== '👁️') {
+                        tickSpan.textContent = '👁️';
+                        tickSpan.style.color = '#34b7f1';
+                    }
+                }
+            }
+        });
+
+        if (newMessages) {
+            const audio = document.getElementById('notification-sound');
+            if (audio) {
+                audio.play().catch(e => { });
             }
         }
-    }
-});
-
-if (newMessages) {
-    const audio = document.getElementById('notification-sound');
-    if (audio) {
-        audio.play().catch(e => { });
-    }
-}
 
     } catch (e) {
-    console.error("Error fetching messages:", e);
-}
+        console.error("Error fetching messages:", e);
+    }
 }
 
 async function fetchUsers() {
@@ -233,7 +260,7 @@ async function fetchUsers() {
 
     try {
         // Pass requester ID to update activity
-        const response = await fetch(`/users?requester=${myId}`);
+        const response = await fetch(`${apiBaseUrl}/users?requester=${myId}`);
         const users = await response.json();
 
         allUsers = users;
