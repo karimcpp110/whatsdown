@@ -18,9 +18,22 @@ string readFile(const string &path) {
   return buffer.str();
 }
 
+// Helper to add CORS headers
+void addCORS(Response &res) {
+  res.set_header("Access-Control-Allow-Origin", "*");
+  res.set_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.set_header("Access-Control-Allow-Headers", "Content-Type");
+}
+
 int main() {
   ChatController server;
   Server svr;
+
+  // Global OPTIONS handler for Preflight requests
+  svr.Options(".*", [](const Request &req, Response &res) {
+    addCORS(res);
+    res.set_content("", "text/plain");
+  });
 
   // Serve static files
   svr.Get("/", [](const Request &req, Response &res) {
@@ -40,6 +53,7 @@ int main() {
 
   // API: Login
   svr.Post("/login", [&](const Request &req, Response &res) {
+    addCORS(res);
     if (req.has_param("id") && req.has_param("name")) {
       string id = req.get_param_value("id");
       string name = req.get_param_value("name");
@@ -64,6 +78,7 @@ int main() {
 
   // API: Send Message
   svr.Post("/send", [&](const Request &req, Response &res) {
+    addCORS(res);
     if (req.has_param("sender") && req.has_param("receiver") &&
         req.has_param("content")) {
       string sender = req.get_param_value("sender");
@@ -80,6 +95,7 @@ int main() {
 
   // API: Process Queue (and Mark Read)
   svr.Get("/process", [&](const Request &req, Response &res) {
+    addCORS(res);
     string viewerId =
         req.has_param("viewer") ? req.get_param_value("viewer") : "";
     string currentChatId =
@@ -119,6 +135,7 @@ int main() {
 
   // API: Get All Users (with Online Status)
   svr.Get("/users", [&](const Request &req, Response &res) {
+    addCORS(res);
     string requesterId =
         req.has_param("requester") ? req.get_param_value("requester") : "";
     if (!requesterId.empty())
