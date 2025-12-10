@@ -185,8 +185,14 @@ int main() {
     res.set_content(json.str(), "application/json");
   });
 
-  cout << "Server started at http://localhost:8080" << endl;
-  svr.listen("0.0.0.0", 8080);
+  cout << "Server started..." << endl;
+
+  // Render.com provides the PORT environment variable
+  const char *portEnv = std::getenv("PORT");
+  int port = portEnv ? std::atoi(portEnv) : 8080;
+
+  cout << "Listening on port " << port << endl;
+  svr.listen("0.0.0.0", port);
 
   return 0;
 }

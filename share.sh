@@ -8,8 +8,6 @@ echo "========================================================"
 echo "Generating Public Link..."
 echo ""
 
-# Use Pinggy.io to create a tunnel
-# -p 443: Connect to port 443
-# -R0:localhost:8080: Forward remote traffic to local port 8080
-# qr@a.pinggy.io: The user/host (qr triggers QR code display)
-ssh -p 443 -R0:localhost:8080 -o StrictHostKeyChecking=no qr@a.pinggy.io
+# Switch to localhost.run as it doesn't require a password
+echo "Attempting to create tunnel using localhost.run..."
+ssh -R 80:localhost:8080 nokey@localhost.run
