@@ -1,0 +1,12 @@
+# Binaries
+chatting_app
+chatting_app.exe
+*.o
+
+# Data (Private)
+users.txt
+messages.txt
+
+# Editor configs
+.vscode/
+*.swp
