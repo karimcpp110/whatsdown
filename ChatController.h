@@ -18,6 +18,9 @@ public:
   // Returns true if registration successful (user didn't exist)
   bool registerUser(const std::string &id, const std::string &name,
                     const std::string &password);
+
+  User *getUser(const std::string &id);
+
   bool verifyUser(const std::string &id, const std::string &password);
   void sendMessage(const std::string &senderId, const std::string &receiverId,
                    const std::string &content);

@@ -26,6 +26,10 @@ bool ChatController::verifyUser(const std::string &id,
   return userManager.verifyUser(id, password);
 }
 
+User *ChatController::getUser(const std::string &id) {
+  return userManager.getUser(id);
+}
+
 void ChatController::sendMessage(const std::string &senderId,
                                  const std::string &receiverId,
                                  const std::string &content) {
