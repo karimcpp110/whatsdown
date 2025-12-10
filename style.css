@@ -62,6 +62,30 @@ body {
     z-index: 1000;
 }
 
+.auth-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.auth-tabs button {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 5px 15px;
+    width: auto;
+}
+
+.auth-tabs button.active {
+    color: var(--primary);
+    border-bottom: 2px solid var(--primary);
+    font-weight: bold;
+}
+
 .login-card {
     background: var(--card-bg);
     padding: 40px;

@@ -52,47 +52,91 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-async function login() {
-    const idInput = document.getElementById('my-id').value;
-    const nameInput = document.getElementById('my-name').value;
-    const passwordInput = document.getElementById('my-password').value;
+// UI Toggles
+function showLogin() {
+    document.getElementById('form-login').classList.remove('hidden');
+    document.getElementById('form-register').classList.add('hidden');
+    document.getElementById('tab-login').classList.add('active');
+    document.getElementById('tab-register').classList.remove('active');
+}
 
-    if (!idInput || !nameInput || !passwordInput) {
-        alert("Please enters ID, Name, and Password");
-        return;
-    }
+function showRegister() {
+    document.getElementById('form-login').classList.add('hidden');
+    document.getElementById('form-register').classList.remove('hidden');
+    document.getElementById('tab-login').classList.remove('active');
+    document.getElementById('tab-register').classList.add('active');
+}
 
-    myId = idInput;
-    myName = nameInput;
-
-    // Save for Auto-Login
-    localStorage.setItem('whatsdown_id', myId);
-    localStorage.setItem('whatsdown_name', myName);
-
-    // Set API URL
+// Common helper to save URL
+function saveServerUrl() {
     const urlInput = document.getElementById('server-url').value.trim();
-    // Remove trailing slash if present
     apiBaseUrl = urlInput.replace(/\/$/, "");
     if (apiBaseUrl) {
         localStorage.setItem('whatsdown_url', apiBaseUrl);
     }
+}
 
-    // Call backend login
+async function performLogin() {
+    const id = document.getElementById('login-id').value;
+    const password = document.getElementById('login-password').value;
+
+    if (!id || !password) {
+        alert("Please enter ID and Password");
+        return;
+    }
+
+    saveServerUrl();
+
     const response = await fetch(`${apiBaseUrl}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `id=${myId}&name=${myName}&password=${encodeURIComponent(passwordInput)}`
+        body: `id=${id}&password=${encodeURIComponent(password)}`
     });
 
-    if (response.status === 401) {
-        alert("Incorrect Password or User ID mismatch!");
+    if (!response.ok) {
+        alert("Login Failed: " + (await response.text()));
         return;
     }
 
-    if (!response.ok) {
-        alert("Login failed: " + response.statusText);
+    // Success
+    const name = await response.text();
+    completeLogin(id, name);
+}
+
+async function performRegister() {
+    const id = document.getElementById('reg-id').value;
+    const name = document.getElementById('reg-name').value;
+    const password = document.getElementById('reg-password').value;
+
+    if (!id || !name || !password) {
+        alert("Please enter all details");
         return;
     }
+
+    saveServerUrl();
+
+    const response = await fetch(`${apiBaseUrl}/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `id=${id}&name=${encodeURIComponent(name)}&password=${encodeURIComponent(password)}`
+    });
+
+    if (!response.ok) {
+        alert("Registration Failed: " + (await response.text()));
+        return;
+    }
+
+    // Success - Auto Login
+    alert("Account Created! Logging in...");
+    completeLogin(id, name);
+}
+
+function completeLogin(id, name) {
+    myId = id;
+    myName = name;
+
+    localStorage.setItem('whatsdown_id', myId);
+    localStorage.setItem('whatsdown_name', myName);
 
     // Switch UI
     document.getElementById('login-screen').classList.add('hidden');

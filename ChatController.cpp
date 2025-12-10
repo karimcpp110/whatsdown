@@ -3,14 +3,22 @@
 #include <iostream>
 #include <sstream>
 
-bool ChatController::userLogin(const std::string &id, const std::string &name,
+bool ChatController::loginUser(const std::string &id,
                                const std::string &password) {
   if (userManager.userExists(id)) {
     return userManager.verifyUser(id, password);
-  } else {
-    userManager.addUser(id, name, password);
-    return true;
   }
+  return false; // User not found
+}
+
+bool ChatController::registerUser(const std::string &id,
+                                  const std::string &name,
+                                  const std::string &password) {
+  if (userManager.userExists(id)) {
+    return false; // User already exists
+  }
+  userManager.addUser(id, name, password);
+  return true;
 }
 
 bool ChatController::verifyUser(const std::string &id,

@@ -17,16 +17,33 @@
     <!-- Login Screen -->
     <div id="login-screen" class="login-container">
         <div class="login-card">
-            <h2>💬 Welcome to WhatsDown</h2>
-            <p>Enter your details to start messaging</p>
-            <input type="number" id="my-id" placeholder="Your ID (e.g., 2024/10001)">
-            <input type="text" id="my-name" placeholder="Your Name">
-            <input type="password" id="my-password" placeholder="Password">
-            <input type="text" id="server-url" placeholder="Server URL (optional)">
-            <button onclick="login()">Start Chatting</button>
-            <p style="font-size: 0.8rem; margin-top: 15px; color: var(--text-secondary);">
-                Connecting from Phone? Enter the Server URL above.
-            </p>
+            <h2>💬 WhatsDown</h2>
+
+            <!-- Tabs -->
+            <div class="auth-tabs">
+                <button id="tab-login" class="active" onclick="showLogin()">Login</button>
+                <button id="tab-register" onclick="showRegister()">Register</button>
+            </div>
+
+            <!-- Login Form -->
+            <div id="form-login">
+                <p>Welcome back! Please login.</p>
+                <input type="text" id="login-id" placeholder="User ID (e.g. 202X/XXXX)">
+                <input type="password" id="login-password" placeholder="Password">
+                <button onclick="performLogin()">Login</button>
+            </div>
+
+            <!-- Register Form -->
+            <div id="form-register" class="hidden">
+                <p>Create a new account.</p>
+                <input type="text" id="reg-id" placeholder="User ID (e.g. 202X/XXXX)">
+                <input type="text" id="reg-name" placeholder="Display Name">
+                <input type="password" id="reg-password" placeholder="Create Password">
+                <button onclick="performRegister()">Register</button>
+            </div>
+
+            <input type="text" id="server-url" placeholder="Server URL (if connecting from phone)"
+                style="margin-top: 20px; font-size: 0.8rem;">
         </div>
     </div>
 

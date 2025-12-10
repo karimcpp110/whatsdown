@@ -52,23 +52,44 @@ int main() {
   });
 
   // API: Login
+  // API: Login
   svr.Post("/login", [&](const Request &req, Response &res) {
     addCORS(res);
-    if (req.has_param("id") && req.has_param("name")) {
+    if (req.has_param("id") && req.has_param("password")) {
       string id = req.get_param_value("id");
-      string name = req.get_param_value("name");
-      string password =
-          req.has_param("password") ? req.get_param_value("password") : "0000";
+      string password = req.get_param_value("password");
 
-      // Attempt login (auto-register if new, check pwd if exists)
-      bool success = server.userLogin(id, name, password);
-
-      if (success) {
+      if (server.loginUser(id, password)) {
         server.updateUserActivity(id);
-        res.set_content("Logged in", "text/plain");
+        // Return user name for frontend convenience
+        User *user = server.getUser(id);
+        string name = user ? user->name : "User";
+        res.set_content(name, "text/plain");
       } else {
         res.status = 401; // Unauthorized
-        res.set_content("Invalid Password", "text/plain");
+        res.set_content("Invalid Credentials", "text/plain");
+      }
+    } else {
+      res.status = 400;
+      res.set_content("Missing parameters", "text/plain");
+    }
+  });
+
+  // API: Register
+  svr.Post("/register", [&](const Request &req, Response &res) {
+    addCORS(res);
+    if (req.has_param("id") && req.has_param("name") &&
+        req.has_param("password")) {
+      string id = req.get_param_value("id");
+      string name = req.get_param_value("name");
+      string password = req.get_param_value("password");
+
+      if (server.registerUser(id, name, password)) {
+        server.updateUserActivity(id);
+        res.set_content("Registered", "text/plain");
+      } else {
+        res.status = 409; // Conflict
+        res.set_content("User ID already exists", "text/plain");
       }
     } else {
       res.status = 400;
