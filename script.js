@@ -195,7 +195,15 @@ function selectContact(id, name) {
     const contactEl = document.querySelector(`.contact[data-id="${id}"]`);
     if (contactEl) contactEl.classList.add('active');
 
+    // Mobile: Show chat area
+    document.getElementById('app-screen').classList.add('chat-active');
+
     fetchMessages();
+}
+
+function showContactList() {
+    currentChatId = null;
+    document.getElementById('app-screen').classList.remove('chat-active');
 }
 
 async function sendMessage() {

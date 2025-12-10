@@ -14,47 +14,82 @@
     <audio id="notification-sound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3"
         preload="auto"></audio>
 
-    <div class="sidebar">
-        <div class="header">
-            <div style="display: flex; align-items: center;">
-                <div class="avatar" id="my-avatar">Me</div>
-                <span id="display-name">User</span>
-            </div>
-            <div>
-                <button class="icon-btn" onclick="toggleTheme()" title="Toggle Dark Mode">🌙</button>
-                <button class="icon-btn" onclick="logout()" title="Logout" style="color: #d32f2f;">🚪</button>
-            </div>
-        </div>
-        <div class="search-bar">
-            <input type="text" id="search-input" placeholder="Search or start new chat">
-        </div>
-        <div class="contact-list" id="contact-list">
-            <!-- Contacts will be loaded here dynamically -->
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-container">
+        <div class="login-card">
+            <h2>💬 Welcome to WhatsDown</h2>
+            <p>Enter your details to start messaging</p>
+            <input type="number" id="my-id" placeholder="Your ID (e.g., 2024/10001)">
+            <input type="text" id="my-name" placeholder="Your Name">
+            <input type="password" id="my-password" placeholder="Password">
+            <input type="text" id="server-url" placeholder="Server URL (optional)">
+            <button onclick="login()">Start Chatting</button>
+            <p style="font-size: 0.8rem; margin-top: 15px; color: var(--text-secondary);">
+                Connecting from Phone? Enter the Server URL above.
+            </p>
         </div>
     </div>
 
-    <!-- Chat Area -->
-    <div class="chat-area">
-        <!-- Welcome Screen (shown when no chat selected) -->
-        <div id="welcome-screen" class="welcome-screen">
-            <div class="icon">💬</div>
-            <h2>WhatsDown Web</h2>
-            <p>Select a contact from the sidebar to start chatting</p>
+    <!-- Main App (Hidden initially) -->
+    <div id="app-screen" class="app-container hidden">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="header">
+                <div style="display: flex; align-items: center;">
+                    <div class="avatar" id="my-avatar">Me</div>
+                    <span id="display-name">User</span>
+                </div>
+                <div>
+                    <button class="icon-btn" onclick="toggleTheme()" title="Toggle Dark Mode">🌙</button>
+                    <button class="icon-btn" onclick="logout()" title="Logout" style="color: #d32f2f;">🚪</button>
+                </div>
+            </div>
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="Search or start new chat">
+            </div>
+            <div class="contact-list" id="contact-list">
+                <!-- Contacts will be loaded here dynamically -->
+            </div>
         </div>
 
-        <!-- Chat Interface (hidden initially) -->
-        <div id="chat-interface" class="hidden" style="display: flex; flex-direction: column; height: 100%;">
-            <div class="chat-header">
-                <div style="display: flex; align-items: center;">
-                    <div class="avatar" id="current-contact-avatar">?</div>
-                    <div class="chat-info">
-                        <div class="name" id="current-contact-name">Select a contact</div>
-                        <div class="status">online</div>
-                    </div>
-                </div>
-                <button class="icon-btn" onclick="clearChat()" title="Clear Chat" style="color: #667781;">🧹</button>
+        <!-- Chat Area -->
+        <div class="chat-area">
+            <!-- Welcome Screen (shown when no chat selected) -->
+            <div id="welcome-screen" class="welcome-screen">
+                <div class="icon">💬</div>
+                <h2>WhatsDown Web</h2>
+                <p>Select a contact from the sidebar to start chatting</p>
             </div>
 
-            <div class="messages-container" id="messages-list">
+            <!-- Chat Interface (hidden initially) -->
+            <div id="chat-interface" class="hidden" style="display: flex; flex-direction: column; height: 100%;">
+                <div class="chat-header">
+                    <div style="display: flex; align-items: center;">
+                        <div class="avatar" id="current-contact-avatar">?</div>
+                        <div class="chat-info">
+                            <div class="name" id="current-contact-name">Select a contact</div>
+                            <div class="status">online</div>
+                        </div>
+                    </div>
+                    <button class="icon-btn" onclick="clearChat()" title="Clear Chat"
+                        style="color: #667781;">🧹</button>
+                </div>
+
+                <div class="messages-container" id="messages-list">
+                    <!-- Messages will appear here -->
+                </div>
+
+                <div class="input-area">
+                    <button class="icon-btn" onclick="insertEmoji('👍')" style="margin-right: 5px;">👍</button>
+                    <button class="icon-btn" onclick="insertEmoji('❤️')" style="margin-right: 5px;">❤️</button>
+                    <button class="icon-btn" onclick="insertEmoji('😂')" style="margin-right: 10px;">😂</button>
+                    <input type="text" id="message-input" placeholder="Type a message">
+                    <button onclick="sendMessage()" class="send-btn">➤</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
 
 </html>
