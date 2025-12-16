@@ -10,4 +10,4 @@ echo ""
 
 # Switch to localhost.run as it doesn't require a password
 echo "Attempting to create tunnel using localhost.run..."
-ssh -R 80:localhost:8080 nokey@localhost.run
+ssh -R 80:127.0.0.1:8080 nokey@localhost.run

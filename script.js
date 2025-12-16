@@ -15,22 +15,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check Auto-Login
     const savedId = localStorage.getItem('whatsdown_id');
     const savedName = localStorage.getItem('whatsdown_name');
-    const savedUrl = localStorage.getItem('whatsdown_url');
-
     if (savedId) {
         // Pre-fill Login Tab
         const loginIdField = document.getElementById('login-id');
         if (loginIdField) loginIdField.value = savedId;
 
-        // Pre-fill Register Tab (optional)
+        // Pre-fill Register Tab
         const regIdField = document.getElementById('reg-id');
         if (regIdField) regIdField.value = savedId;
-
-        if (savedUrl) {
-            const urlField = document.getElementById('server-url');
-            if (urlField) urlField.value = savedUrl;
-            apiBaseUrl = savedUrl;
-        }
     }
 
     // Check Dark Mode
@@ -73,14 +65,7 @@ function showRegister() {
     document.getElementById('tab-register').classList.add('active');
 }
 
-// Common helper to save URL
-function saveServerUrl() {
-    const urlInput = document.getElementById('server-url').value.trim();
-    apiBaseUrl = urlInput.replace(/\/$/, "");
-    if (apiBaseUrl) {
-        localStorage.setItem('whatsdown_url', apiBaseUrl);
-    }
-}
+
 
 async function performLogin() {
     const id = document.getElementById('login-id').value;
@@ -91,15 +76,7 @@ async function performLogin() {
         return;
     }
 
-    saveServerUrl();
 
-    // Enforce Server URL if using GitHub Pages (not localhost)
-    if (!apiBaseUrl && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-        alert("⚠️ You are using the online version.\nPlease enter your Pinggy Server URL in the box below!");
-        document.getElementById('server-url').focus();
-        document.getElementById('server-url').style.border = "2px solid red";
-        return;
-    }
 
     try {
         const response = await fetch(`${apiBaseUrl}/login`, {
@@ -132,15 +109,7 @@ async function performRegister() {
         return;
     }
 
-    saveServerUrl();
 
-    // Enforce Server URL if using GitHub Pages (not localhost)
-    if (!apiBaseUrl && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-        alert("⚠️ You are using the online version.\nPlease enter your Pinggy Server URL in the box below!");
-        document.getElementById('server-url').focus();
-        document.getElementById('server-url').style.border = "2px solid red";
-        return;
-    }
 
     try {
         const response = await fetch(`${apiBaseUrl}/register`, {
